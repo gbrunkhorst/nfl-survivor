@@ -9,7 +9,7 @@ The repo currently consists of two directories:
 
 Each directory also contains source_data, processed_data, and notebooks for analysis.  
 
-# Survior Pools
+# Survivor Pools
 A survivor pool is a betting game that last the duration of the NFL season.  
 * Each bettor chooses one team to win each week.  
 * If the team looses, the bettor is knocked out.  
@@ -18,3 +18,6 @@ A survivor pool is a betting game that last the duration of the NFL season.
 
 # Data
 The starting dataset for the simulation is from https://www.kaggle.com/tobycrabtree/nfl-scores-and-betting-data
+
+# How-to
+The notebooks folders have notebooks that show the logic of the modules
