@@ -1,7 +1,7 @@
 # nfl-survivor
-Repo for simulations and stats for making picks in an NFL survivor pool.
+Repo for simulations and stats for evaluating picking strategies in an NFL survivor pool.
 
-My brother, dad, and I have spent too many years on baseless theorizing about the NFL survivor pool; this is the antidote.  It is also a vehicle for having fun with python, git, and stats.  
+My brother, dad, and I have spent too many years baselessly theorizing about the NFL survivor pool; this is the antidote.  It is also a vehicle for having fun with python, git, and stats.  
 
 The repo currently consists of two directories:
 * bettors_probs: a module for calculating the strength of a pick based on the what other bettors are picking.    
@@ -20,4 +20,4 @@ A survivor pool is a betting game that last the duration of the NFL season.
 The starting dataset for the simulation is from https://www.kaggle.com/tobycrabtree/nfl-scores-and-betting-data
 
 # How-to
-The notebooks folders have notebooks that show the logic of the modules
+The notebooks folders contain jupyter notebook files that show the logic of the modules
