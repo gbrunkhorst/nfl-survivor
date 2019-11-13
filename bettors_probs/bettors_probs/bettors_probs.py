@@ -123,4 +123,4 @@ class BettorsProbs():
         # one more normalization to 100
         bettors = bettors/bettors.sum()*100
         bet_strength = self.bet_strength(bettors  = bettors, probs = probs)
-        return bettors, bet_strength
+        return bettors
