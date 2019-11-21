@@ -14,9 +14,8 @@ def load_process_spread_scores(export_csv = False):
     # load CSV file (data originally from Kaggle
     # https://www.kaggle.com/tobycrabtree/nfl-scores-and-betting-data
 
-    source_path = r'C:\Users\greg\Documents\NFL\survivor_sim\source_data'
-    processed_path = r'C:\Users\greg\Documents\NFL\survivor_sim\processed_data'
-    # todo: change this to a relative path 
+    source_path = r'..\source_data'
+    processed_path = r'..\processed_data'
 
     teams = pd.read_csv(source_path + "\\nfl_teams.csv")
     spread_scores = pd.read_csv(source_path + '\\spreadspoke_scores.csv')
