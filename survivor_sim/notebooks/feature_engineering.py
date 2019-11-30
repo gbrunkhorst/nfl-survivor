@@ -14,7 +14,7 @@ import numpy as np
 path = r'..\processed_data'
 data = pd.read_csv(path + '\\spreadspoke_scores_processed.csv')
 
-#process
+# more data preparation 
 def process(data):
     # base the "left hand" team based on the home team; make the spread negative = favorite   
     data.loc[(data.team_home_id == data.team_favorite_id),'spread_home'] = data['spread_favorite']
@@ -56,7 +56,7 @@ def process(data):
                  'spread','pts_for', 'pts_against', 'won']]
     return data
 
-def lookback_fun(df, imput, params, lookbacks):
+def lookback_fun(df, impute, params, lookbacks):
     ''' helper function for other feature creators'''
     
     new_features = []
@@ -72,7 +72,7 @@ def lookback_fun(df, imput, params, lookbacks):
                 rolling  = df[df.team == team][param].rolling(
                         window = lookback, min_periods = 1).mean().tolist()
                 # rolling average is inclusive - shift back and impute the first value as the global average
-                rolling.insert(0, imput)
+                rolling.insert(0, impute)
                 del rolling[-1]
                 df.loc[df.team == team, new_feature] = rolling
 
@@ -85,7 +85,7 @@ def lookback_fun(df, imput, params, lookbacks):
     df = df.merge(df[['schedule_season', 'schedule_week', 'team']+new_features
                      ].rename(columns  = col_names), 
                 on = ['schedule_season', 'schedule_week', 'opponent'] )
-    return df
+    return df, new_features + opp_features
 
 
 def for_against(df, lookbacks = [1]):
@@ -98,7 +98,7 @@ def for_against(df, lookbacks = [1]):
     
     average_pts_for = df.pts_for.mean() # for imputing the first value
     params = ['pts_for', 'pts_against']
-    return lookback_fun(df, imput = average_pts_for, 
+    return lookback_fun(df, impute = average_pts_for, 
                     params = params, lookbacks = lookbacks)
 
 # add win/loss in previous n games
@@ -114,25 +114,27 @@ def win_loss(df, lookbacks = [1]):
     
     average_val = 0.5   # for imputing the first value
     params = ['won']
-    return lookback_fun(df, imput = average_val, 
+    return lookback_fun(df, impute = average_val, 
                     params = params, lookbacks = lookbacks)
 
-def for_against_weighted(df, lookbacks = [1]):
-    '''function adds features based on points scored and 
-    given up for a number of previous games'''
-    # df is the starting dataframe
-    # lookbacks is the # of games to lookback 
-    # the length of lookbacks is the # of new features 
-    # to add 
+def for_against_weighted(df, lookbacks = [1], lookbacks_initial = [14]):
+    '''
+    function adds features based on points scored and 
+    given up for a number of previous games
+    
+    df: is the starting dataframe
+    lookbacks: is the # of games to lookback the length of new features to add
+    lookbacks_initial: is the initial games to lookback to guage the strength of the team
+        needs to be a list of one #
+    ''' 
     
     average_pts_for = df.pts_for.mean() # for imputing the first value
-    
     params = ['pts_for', 'pts_against']
     
     # initial loop through the lookbacks is for the baseline
     # strength only.  Used 14 as the loopback
-    df = lookback_fun(df, imput = average_pts_for, 
-                    params = params, lookbacks = [14])
+    df = lookback_fun(df, impute = average_pts_for, 
+                    params = params, lookbacks = lookbacks_initial)
 
     # add the adjusted pts_for and against
     df['pts_for_adj'] =  df.pts_for - df.opp_pts_against_roll_14
@@ -140,7 +142,7 @@ def for_against_weighted(df, lookbacks = [1]):
     
     # now use the adjusted points for and against add opponents' pts for and against
     
-    params = ['pts_for', 'pts_against']
+    params = ['pts_for_adj', 'pts_against_adj']
     opp_features = []
     for feature in new_features:
         opp_features.append('opp_'+feature)
