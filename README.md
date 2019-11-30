@@ -10,7 +10,7 @@ The repo currently consists of two directories:
 Each directory also contains source_data, processed_data, and notebooks for analysis.  
 
 # Survivor Pools
-A survivor pool is a betting game that last the duration of the NFL season.  
+A survivor pool is a betting game that lasts the duration of the NFL season.  
 * Each bettor chooses one team to win each week.  
 * If the team looses, the bettor is knocked out.  
 * The bettor cannot choose the same team twice.  
