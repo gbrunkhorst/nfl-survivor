@@ -8,11 +8,12 @@ Feature Engineering
 """
 
 import pandas as pd
-import numpy as np
 
 #data upload
-path = r'..\processed_data'
-data = pd.read_csv(path + '\\spreadspoke_scores_processed.csv')
+def read_data():
+    path = r'..\processed_data'
+    data = pd.read_csv(path + '\\spreadspoke_scores_processed.csv')
+    return data
 
 # more data preparation 
 def process(data):
@@ -50,14 +51,14 @@ def process(data):
     copy.home = False
     copy.spread = -copy.spread
     copy.won = -copy.won
-    data = pd.concat([data, copy]).sort_values(by = ['schedule_season', 
+    data = pd.concat([data, copy], sort=False ).sort_values(by = ['schedule_season', 
                     'schedule_week', 'team'])
     data = data[[ 'schedule_season', 'schedule_week','team','opponent', 'home',
                  'spread','pts_for', 'pts_against', 'won']]
     return data
 
 def lookback_fun(df, impute, params, lookbacks):
-    ''' helper function for other feature creators'''
+    ''' helper function for feature creators functions'''
     
     new_features = []
     teams = df.team.drop_duplicates().sort_values().tolist()
@@ -117,7 +118,8 @@ def win_loss(df, lookbacks = [1]):
     return lookback_fun(df, impute = average_val, 
                     params = params, lookbacks = lookbacks)
 
-def for_against_weighted(df, lookbacks = [1], lookbacks_initial = [14]):
+def for_against_weighted(df, lookbacks = [1], lookbacks_initial = [14], 
+                         drop_unweighted = True):
     '''
     function adds features based on points scored and 
     given up for a number of previous games
@@ -133,70 +135,39 @@ def for_against_weighted(df, lookbacks = [1], lookbacks_initial = [14]):
     
     # initial loop through the lookbacks is for the baseline
     # strength only.  Used 14 as the loopback
-    df = lookback_fun(df, impute = average_pts_for, 
+    df, baseline_features = lookback_fun(df, impute = average_pts_for, 
                     params = params, lookbacks = lookbacks_initial)
-
     # add the adjusted pts_for and against
-    df['pts_for_adj'] =  df.pts_for - df.opp_pts_against_roll_14
-    df['pts_against_adj'] = df.pts_against - df.opp_pts_for_roll_14
+    df['pts_for_adj'] =  df.pts_for - df[baseline_features[3]]
+    df['pts_against_adj'] = df.pts_against - df[baseline_features[2]]
     
     # now use the adjusted points for and against add opponents' pts for and against
+    average_pts_for = df.pts_for_adj.mean() # for imputing the first value
+    params = ['pts_for_adj', 'pts_against_adj']  
     
-    params = ['pts_for_adj', 'pts_against_adj']
-    opp_features = []
-    for feature in new_features:
-        opp_features.append('opp_'+feature)
-    col_names = {'team':'opponent'}
-    col_names.update(dict(zip(new_features, opp_features)))
-    games = games.merge(games[['schedule_season', 'schedule_week', 'team']+new_features
-                     ].rename(columns  = col_names), 
-                on = ['schedule_season', 'schedule_week', 'opponent'] )
+    df, new_features = lookback_fun(df, impute = average_pts_for, 
+                    params = params, lookbacks = lookbacks)
     
+    if drop_unweighted:
+        df.drop(columns = baseline_features + params, inplace = True)
+    else:
+        new_features = new_features + baseline_features + params
     
-    average_pts_for = games.pts_for_adj.mean() # for imputing the first value
-    
-    params = ['pts_for_adj', 'pts_against_adj']
-    new_features = []
-
-    # loop through the lookbacks
-    for lookback in lookbacks:
-        # lookbacks for points for and points againe
-        for param in params:
-            new_feature = param+'_roll_'+str(lookback)
-            new_features.append(new_feature)
-            # get the rolling average for each team
-            for team in teams:
-                rolling  = games[games.team == team][param].rolling(window = lookback, min_periods = 1).mean().tolist()
-                # rolling average is inclusive - shift back and impute the first value as the global average
-                rolling.insert(0,average_pts_for)
-                del rolling[-1]
-                games.loc[games.team == team, new_feature] = rolling
-
-    
-    
-    # add opponents' pts for and against (repeated from above, not good - use a separate function)
-    opp_features = []
-    for feature in new_features:
-        opp_features.append('opp_'+feature)
-    col_names = {'team':'opponent'}
-    col_names.update(dict(zip(new_features, opp_features)))
-    games = games.merge(games[['schedule_season', 'schedule_week', 'team']+new_features
-                     ].rename(columns  = col_names), 
-                on = ['schedule_season', 'schedule_week', 'opponent'] )
-    
-    
+    return df, new_features
 
 
-
-
-
+data  = read_data()
 
 data = process(data)
-data = for_against(data, lookbacks = [1,2])
-data = win_loss(data, lookbacks = [1,2])
+# data, new_features = for_against(data, lookbacks = [1,2])
+# data, new_features = win_loss(data, lookbacks = [1,2])
+data, new_features = for_against_weighted(data, lookbacks = [4,14], 
+                                          drop_unweighted = True)
 
+export_csv = False
 
-data.to_csv('feature_engineer.csv')
+if export_csv:
+    data.to_csv('feature_engineer.csv')
 
 
 
