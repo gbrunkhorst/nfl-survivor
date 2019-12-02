@@ -155,9 +155,23 @@ def for_against_weighted(df, lookbacks = [1], lookbacks_initial = [14],
     
     return df, new_features
 
+def param_cube(df, param = 'spread'):
+    new_feature = param+'3'
+    df[new_feature] = df[param]**3
+    return df, new_feature
+
+def params_subtract(df, param0, param1):
+    new_feature = param0+'_minus_'+param1
+    df[new_feature] = df[param0] - df[param1]
+    return df, new_feature
+
+def param_exp(df, param):
+    new_feature = '10**'+param
+    df[new_feature] = 10**df[param]
+    return df, new_feature
+    
 
 data  = read_data()
-
 data = process(data)
 # data, new_features = for_against(data, lookbacks = [1,2])
 # data, new_features = win_loss(data, lookbacks = [1,2])
@@ -165,7 +179,6 @@ data, new_features = for_against_weighted(data, lookbacks = [4,14],
                                           drop_unweighted = True)
 
 export_csv = False
-
 if export_csv:
     data.to_csv('feature_engineer.csv')
 
